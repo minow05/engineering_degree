@@ -1,0 +1,20 @@
+{
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "xaver.clang-format",
+    "C_Cpp.formatting": "clangFormat",
+    "C_Cpp.clang_format_path": "clang-format",
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    "C_Cpp.codeAnalysis.clangTidy.headerFilter": "client/src/.*",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.intelliSenseEngine": "default",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.exportCompileCommands": true,
+    "files.associations": {
+        "*.hpp": "cpp",
+        "*.cpp": "cpp",
+        "vector": "cpp",
+        "string": "cpp",
+        "filesystem": "cpp"
+    }
+}

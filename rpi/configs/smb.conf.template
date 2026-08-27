@@ -1,0 +1,29 @@
+# Samba Configuration Template for Raspberry Pi (Thesis Storage Server)
+
+[global]
+   workgroup = WORKGROUP
+   server string = RaspberryPi Storage Server
+   security = user
+   map to guest = Bad User
+   dns proxy = no
+   log file = /var/log/samba/log.%m
+   max log size = 1000
+   panic action = /usr/share/samba/panic-action %d
+
+[SharedStorage]
+   comment = Shared Network Storage for All Users
+   path = /srv/shared
+   browseable = yes
+   read only = no
+   guest ok = no
+   create mask = 0775
+   directory mask = 0775
+   valid users = @ssh-shared
+
+[Homes]
+   comment = Isolated User Home Directories
+   browseable = no
+   read only = no
+   create mask = 0700
+   directory mask = 0700
+   valid users = %S

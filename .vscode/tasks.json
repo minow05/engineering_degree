@@ -1,0 +1,46 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "CMake Configure",
+            "command": "cmake",
+            "args": [
+                "-B",
+                "${workspaceFolder}/build",
+                "-S",
+                "${workspaceFolder}"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "CMake Build",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/build",
+                "--config",
+                "Debug"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "CMake Configure"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "Run Clang-Tidy Checks",
+            "command": "clang-tidy",
+            "args": [
+                "-p",
+                "${workspaceFolder}/build",
+                "client/src/main.cpp"
+            ],
+            "problemMatcher": "$gcc"
+        }
+    ]
+}
