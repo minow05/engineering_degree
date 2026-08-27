@@ -1,4 +1,3 @@
-# Target library for utility helpers (Exec, process wrappers)
 file(GLOB_RECURSE UTILS_SOURCES *.cpp *.hpp)
 
 add_library(smart_ssh_utils STATIC
