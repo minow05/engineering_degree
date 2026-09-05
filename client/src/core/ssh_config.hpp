@@ -8,9 +8,9 @@
 namespace smart_ssh::core {
 
 struct host_entry {
-    std::string name;          // Host alias (e.g. raspi)
-    std::string host_name;     // HostName/IP (e.g. 192.168.1.50)
-    std::string user;          // SSH User
+    std::string name;          // Host alias (e.g. minowRPI)
+    std::string host_name;     // HostName/IP (e.g. minow.rpi or 172.30.0.1)
+    std::string user;          // SSH User (e.g. minow)
     int port{22};              // Port
     std::string identity_file; // Private key path
     std::map<std::string, std::string> extra_options;

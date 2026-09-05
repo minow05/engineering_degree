@@ -4,21 +4,20 @@
 #include <cstdlib>
 #include <memory>
 
-namespace smart_ssh::utils {
-
 #ifdef _WIN32
-    #define POPEN _popen
-    #define PCLOSE _pclose
+#define POPEN _popen
+#define PCLOSE _pclose
 #else
-    #define POPEN popen
-    #define PCLOSE pclose
+#define POPEN popen
+#define PCLOSE pclose
 #endif
 
-exec_result run_command(const std::string& command) {
+namespace smart_ssh::utils {
+
+[[nodiscard]] exec_result run_command(const std::string& command) {
     exec_result result;
     std::array<char, 256> buffer{};
 
-    // Redirect stderr to stdout so we capture all messages
     std::string full_cmd = command + " 2>&1";
 
     std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(full_cmd.c_str(), "r"), PCLOSE);
@@ -36,16 +35,16 @@ exec_result run_command(const std::string& command) {
     return result;
 }
 
-int run_interactive(const std::string& command) {
+[[nodiscard]] int run_interactive(const std::string& command) {
     return std::system(command.c_str());
 }
 
-bool has_command(const std::string& cmd_name) {
-    #ifdef _WIN32
-        std::string check_cmd = "where " + cmd_name + " >nul 2>&1";
-    #else
-        std::string check_cmd = "which " + cmd_name + " >/dev/null 2>&1";
-    #endif
+[[nodiscard]] bool has_command(const std::string& cmd_name) {
+#ifdef _WIN32
+    std::string check_cmd = "where " + cmd_name + " >nul 2>&1";
+#else
+    std::string check_cmd = "which " + cmd_name + " >/dev/null 2>&1";
+#endif
     return (std::system(check_cmd.c_str()) == 0);
 }
 

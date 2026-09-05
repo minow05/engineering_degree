@@ -5,7 +5,7 @@
             "name": "Debug SmartSSH CLI",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/client/src/Debug/smart-ssh.exe",
+            "program": "${workspaceFolder}/build/out/smart-ssh.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
