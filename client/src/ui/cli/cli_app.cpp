@@ -49,10 +49,6 @@ void cli_app::render_main_menu() {
             modules::run_file_manager(session);
         });
 
-        main_menu.add_item("Process & Container Hosting Manager (Docker / Services)", [&]() {
-            modules::run_process_manager(session);
-        });
-
         main_menu.add_item("Resource & Storage Quota Monitor (CPU, RAM, Disk)", [&]() {
             modules::run_resource_monitor(session);
         });

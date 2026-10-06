@@ -23,7 +23,6 @@ wizard_config run_host_wizard() {
     ui::print_header("Select Modular Services to Enable");
     cfg.features.ssh_keys = ui::confirm("Enable Passwordless SSH Key Pair Setup & Deployment?", true);
     cfg.features.samba_storage = ui::confirm("Enable Network Storage (Samba & File Manager)?", true);
-    cfg.features.process_hosting = ui::confirm("Enable Process & Docker Container Management?", true);
 
     ui::print_success("Wizard configuration completed!");
     return cfg;

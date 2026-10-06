@@ -16,22 +16,27 @@ namespace smart_ssh::utils {
 
 exec_result run_command(const std::string& command) {
     exec_result result;
-    std::array<char, 256> buffer{};
+    if (command.empty()) {
+        result.exit_code = -1;
+        result.stderr_str = "Empty command string.";
+        return result;
+    }
 
+    std::array<char, 256> buffer{};
     std::string full_cmd = command + " 2>&1";
 
-    std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(full_cmd.c_str(), "r"), PCLOSE);
+    FILE* pipe = POPEN(full_cmd.c_str(), "r");
     if (!pipe) {
         result.exit_code = -1;
         result.stderr_str = "Failed to open process pipe.";
         return result;
     }
 
-    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe) != nullptr) {
         result.stdout_str += buffer.data();
     }
 
-    result.exit_code = 0;
+    result.exit_code = PCLOSE(pipe);
     return result;
 }
 

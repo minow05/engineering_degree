@@ -61,3 +61,17 @@ A dedicated bare-metal installer script for setting up a fresh, unconfigured Ras
 
 - Real-time user disk quota enforcement (`quota -u <user>`).
 - Per-user Linux cgroup CPU & Memory limits for process hosting and containers.
+
+---
+
+## 5. Docker Container & Application Process Hosting Extension
+
+### Overview
+A modular extension designed for future deployment after thesis defense, expanding SmartSSH from a pure file resource access system into an application container hosting manager.
+
+### Key Capabilities:
+1. **Container Inspection**: Remote enumeration of running and stopped Docker microservices (`docker ps -a`).
+2. **Log Streaming**: Remote log inspection (`docker logs --tail 50 <container>`) over SSH child processes.
+3. **Lifecycle Management**: Container start, stop, and restart controls (`docker start/stop/restart`).
+4. **Systemd Service Supervision**: Integration with systemd unit states (`systemctl status`) for background host daemons.
+

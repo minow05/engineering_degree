@@ -18,6 +18,7 @@ public:
     active_session& get_session() { return m_session; }
     const active_session& get_session() const { return m_session; }
 
+    configuration& get_config() { return m_config; }
     const configuration& get_config() const { return m_config; }
 
 private:
