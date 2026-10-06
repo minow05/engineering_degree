@@ -16,8 +16,8 @@ public:
     void setup_stub_environment();
     void teardown_stub_environment();
 
-    [[nodiscard]] core::active_session create_stub_session() const;
-    [[nodiscard]] static std::string get_mock_output(const std::string& command);
+    core::active_session create_stub_session() const;
+    static std::string get_mock_output(const std::string& command);
 
 private:
     std::filesystem::path m_temp_dir;

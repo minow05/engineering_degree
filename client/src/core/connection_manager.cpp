@@ -3,7 +3,7 @@
 
 namespace smart_ssh::core {
 
-[[nodiscard]] bool establish_session(active_session& session, const host_entry& host) {
+bool establish_session(active_session& session, const host_entry& host) {
     session.host_alias = host.name;
     session.host_address = host.host_name.empty() ? host.name : host.host_name;
     session.user = host.user.empty() ? "pi" : host.user;
@@ -14,7 +14,7 @@ namespace smart_ssh::core {
     return session.is_connected;
 }
 
-[[nodiscard]] int start_interactive_shell(const active_session& session) {
+int start_interactive_shell(const active_session& session) {
     std::string cmd = "ssh";
     if (session.port != 22) {
         cmd += " -p " + std::to_string(session.port);
@@ -32,7 +32,7 @@ namespace smart_ssh::core {
     return utils::run_interactive(cmd);
 }
 
-[[nodiscard]] bool test_connection(const std::string& host_address, int port) {
+bool test_connection(const std::string& host_address, int port) {
 #ifdef _WIN32
     std::string cmd = "powershell -Command \"Test-NetConnection -ComputerName '" + host_address + "' -Port " + std::to_string(port) + " | Select-Object -ExpandProperty TcpTestSucceeded\"";
     auto res = utils::run_command(cmd);

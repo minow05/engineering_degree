@@ -4,7 +4,7 @@
 
 namespace smart_ssh::installer {
 
-[[nodiscard]] wizard_config run_host_wizard() {
+wizard_config run_host_wizard() {
     wizard_config cfg;
 
     ui::print_header("SmartSSH Interactive Host Installer Wizard");

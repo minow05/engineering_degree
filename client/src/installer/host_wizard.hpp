@@ -15,6 +15,6 @@ struct wizard_config {
     feature_flags features;
 };
 
-[[nodiscard]] wizard_config run_host_wizard();
+wizard_config run_host_wizard();
 
 } // namespace smart_ssh::installer

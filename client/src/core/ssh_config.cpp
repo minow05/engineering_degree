@@ -7,7 +7,7 @@
 
 namespace smart_ssh::core {
 
-[[nodiscard]] std::filesystem::path ssh_config::get_default_config_path() {
+std::filesystem::path ssh_config::get_default_config_path() {
 #ifdef _WIN32
     const char* user_profile = std::getenv("USERPROFILE");
     if (user_profile) {
@@ -32,7 +32,7 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-[[nodiscard]] bool ssh_config::load() {
+bool ssh_config::load() {
     m_entries.clear();
     if (!std::filesystem::exists(m_config_path)) {
         return true;
@@ -89,7 +89,7 @@ static std::string trim(const std::string& str) {
     return true;
 }
 
-[[nodiscard]] bool ssh_config::save() const {
+bool ssh_config::save() const {
     if (m_config_path.has_parent_path()) {
         std::filesystem::create_directories(m_config_path.parent_path());
     }
@@ -125,7 +125,7 @@ void ssh_config::add_or_update_entry(const host_entry& entry) {
     }
 }
 
-[[nodiscard]] bool ssh_config::remove_entry(const std::string& host_alias) {
+bool ssh_config::remove_entry(const std::string& host_alias) {
     auto it = std::remove_if(m_entries.begin(), m_entries.end(), [&](const host_entry& e) {
         return e.name == host_alias;
     });
@@ -136,7 +136,7 @@ void ssh_config::add_or_update_entry(const host_entry& entry) {
     return false;
 }
 
-[[nodiscard]] const host_entry* ssh_config::find_entry(const std::string& host_alias) const {
+const host_entry* ssh_config::find_entry(const std::string& host_alias) const {
     for (const auto& e : m_entries) {
         if (e.name == host_alias) return &e;
     }

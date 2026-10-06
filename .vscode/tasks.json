@@ -3,19 +3,21 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "CMake Configure",
+            "label": "CMake Configure (Clang)",
             "command": "cmake",
             "args": [
                 "-B",
                 "${workspaceFolder}/build",
                 "-S",
-                "${workspaceFolder}"
+                "${workspaceFolder}",
+                "-T",
+                "ClangCL"
             ],
             "group": "build"
         },
         {
             "type": "shell",
-            "label": "CMake Build",
+            "label": "CMake Build (Clang)",
             "command": "cmake",
             "args": [
                 "--build",
@@ -28,7 +30,7 @@
                 "isDefault": true
             },
             "dependsOn": [
-                "CMake Configure"
+                "CMake Configure (Clang)"
             ]
         },
         {
@@ -38,7 +40,7 @@
             "args": [
                 "-p",
                 "${workspaceFolder}/build",
-                "client/src/main.cpp"
+                "client/src/main_installer.cpp"
             ],
             "problemMatcher": "$gcc"
         }

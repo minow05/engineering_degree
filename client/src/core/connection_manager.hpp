@@ -14,8 +14,8 @@ struct active_session {
     bool is_connected{false};
 };
 
-[[nodiscard]] bool establish_session(active_session& session, const host_entry& host);
-[[nodiscard]] int start_interactive_shell(const active_session& session);
-[[nodiscard]] bool test_connection(const std::string& host_address, int port = 22);
+bool establish_session(active_session& session, const host_entry& host);
+int start_interactive_shell(const active_session& session);
+bool test_connection(const std::string& host_address, int port = 22);
 
 } // namespace smart_ssh::core

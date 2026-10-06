@@ -2,13 +2,17 @@
 #include "ssh_stub.hpp"
 #include "utils/exec.hpp"
 #include "ui/terminal.hpp"
+#include "core/configuration.hpp"
+#include "core/application.hpp"
 #include "core/ssh_config.hpp"
 #include "core/key_manager.hpp"
 #include "core/connection_manager.hpp"
 #include "core/system_operations.hpp"
+#include "installer/setup_wizard.hpp"
 #include "modules/file_manager.hpp"
 #include "modules/process_manager.hpp"
 #include "modules/resource_monitor.hpp"
+#include <filesystem>
 
 using namespace smart_ssh;
 
@@ -49,6 +53,40 @@ TEST_F(SSHStubEnvironmentTest, MockUserQuotaOutput) {
 TEST_F(SSHStubEnvironmentTest, MockFileListingOutput) {
     std::string mock_ls = tests::ssh_stub::get_mock_output("ls -la /home/mockuser");
     EXPECT_NE(mock_ls.find("test_document.txt"), std::string::npos);
+}
+
+TEST(SmartSSHConfigurationTest, SaveLoadAndResetLocalConfig) {
+    std::filesystem::path test_cfg_path = "stub_app_config.cfg";
+    core::configuration cfg(test_cfg_path);
+
+    // Initial state should be unconfigured
+    EXPECT_FALSE(cfg.load());
+    EXPECT_FALSE(cfg.is_configured());
+
+    // Populate data
+    core::app_config_data data;
+    data.host_alias = "testRPI";
+    data.host_address = "192.168.1.100";
+    data.username = "pi";
+    data.port = 22;
+    data.identity_file = "~/.ssh/id_ed25519_testRPI";
+    data.is_configured = true;
+
+    cfg.set_data(data);
+    EXPECT_TRUE(cfg.save());
+
+    // Load & verify
+    core::configuration loaded_cfg(test_cfg_path);
+    EXPECT_TRUE(loaded_cfg.load());
+    EXPECT_TRUE(loaded_cfg.is_configured());
+    EXPECT_EQ(loaded_cfg.get_data().host_alias, "testRPI");
+    EXPECT_EQ(loaded_cfg.get_data().host_address, "192.168.1.100");
+
+    // Reset local configuration
+    EXPECT_TRUE(loaded_cfg.reset());
+    EXPECT_FALSE(loaded_cfg.is_configured());
+
+    std::filesystem::remove(test_cfg_path);
 }
 
 TEST(SmartSSHExecTest, CommandExecutionCheck) {

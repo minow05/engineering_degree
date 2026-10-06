@@ -13,7 +13,7 @@ static std::string build_ssh_target(const core::active_session& session) {
     return session.host_alias;
 }
 
-[[nodiscard]] std::string list_docker_containers(const core::active_session& session) {
+std::string list_docker_containers(const core::active_session& session) {
     std::string target = build_ssh_target(session);
     std::string cmd = "ssh";
     if (session.port != 22) cmd += " -p " + std::to_string(session.port);
@@ -24,7 +24,7 @@ static std::string build_ssh_target(const core::active_session& session) {
     return res.stdout_str;
 }
 
-[[nodiscard]] std::string get_docker_logs(const core::active_session& session, const std::string& container_name) {
+std::string get_docker_logs(const core::active_session& session, const std::string& container_name) {
     std::string target = build_ssh_target(session);
     std::string cmd = "ssh";
     if (session.port != 22) cmd += " -p " + std::to_string(session.port);
@@ -35,7 +35,7 @@ static std::string build_ssh_target(const core::active_session& session) {
     return res.stdout_str;
 }
 
-[[nodiscard]] bool control_docker_container(const core::active_session& session, const std::string& container_name, const std::string& action) {
+bool control_docker_container(const core::active_session& session, const std::string& container_name, const std::string& action) {
     std::string target = build_ssh_target(session);
     std::string cmd = "ssh";
     if (session.port != 22) cmd += " -p " + std::to_string(session.port);
@@ -53,6 +53,7 @@ void run_process_manager(const core::active_session& session) {
         ui::print_info("Querying containers and systemd services on " + session.host_alias + "...");
         std::string output = list_docker_containers(session);
         std::cout << "\n" << output << "\n";
+        ui::wait_for_key();
     });
 
     p_menu.add_item("Inspect Container Logs", [&]() {
@@ -61,6 +62,7 @@ void run_process_manager(const core::active_session& session) {
         ui::print_info("Fetching last 50 log lines for '" + container + "'...");
         std::string logs = get_docker_logs(session, container);
         std::cout << "\n" << logs << "\n";
+        ui::wait_for_key();
     });
 
     p_menu.add_item("Start / Stop / Restart Container", [&]() {
@@ -74,6 +76,7 @@ void run_process_manager(const core::active_session& session) {
         } else {
             ui::print_error("Failed to execute action on container.");
         }
+        ui::wait_for_key();
     });
 
     p_menu.run();

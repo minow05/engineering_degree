@@ -4,6 +4,11 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <conio.h>
+#else
+#include <termios.h>
+#include <unistd.h>
+#include <cstdio>
 #endif
 
 namespace smart_ssh::ui {
@@ -63,7 +68,7 @@ void print_error(const std::string& msg) {
     std::cout << color::red << "[-] ERROR: " << msg << color::reset << "\n";
 }
 
-[[nodiscard]] std::string prompt(const std::string& label, const std::string& default_value) {
+std::string prompt(const std::string& label, const std::string& default_value) {
     std::cout << color::bold << label << color::reset;
     if (!default_value.empty()) {
         std::cout << color::gray << " [" << default_value << "]" << color::reset;
@@ -78,18 +83,41 @@ void print_error(const std::string& msg) {
     return input;
 }
 
-[[nodiscard]] std::string prompt_password(const std::string& label) {
+std::string prompt_password(const std::string& label) {
     std::cout << color::bold << label << ": " << color::reset;
     std::string pass;
     std::getline(std::cin, pass);
     return pass;
 }
 
-[[nodiscard]] bool confirm(const std::string& question, bool default_yes) {
+bool confirm(const std::string& question, bool default_yes) {
     std::string default_str = default_yes ? "Y/n" : "y/N";
     std::string input = prompt(question + " (" + default_str + ")");
     if (input.empty()) return default_yes;
     return (input[0] == 'y' || input[0] == 'Y');
+}
+
+char read_key_immediate() {
+#ifdef _WIN32
+    return static_cast<char>(_getch());
+#else
+    char ch = 0;
+    termios oldt{}, newt{};
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = static_cast<char>(getchar());
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+#endif
+}
+
+void wait_for_key() {
+    std::cout << color::gray << "\nPress any key to continue..." << color::reset;
+    std::cout.flush();
+    (void)read_key_immediate();
+    std::cout << "\n";
 }
 
 } // namespace smart_ssh::ui

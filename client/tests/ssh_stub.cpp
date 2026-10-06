@@ -42,7 +42,7 @@ void ssh_stub::teardown_stub_environment() {
     std::filesystem::remove_all(m_temp_dir, ec);
 }
 
-[[nodiscard]] core::active_session ssh_stub::create_stub_session() const {
+core::active_session ssh_stub::create_stub_session() const {
     core::active_session session;
     session.host_alias = "mockRPI";
     session.host_address = "127.0.0.1";
@@ -53,7 +53,7 @@ void ssh_stub::teardown_stub_environment() {
     return session;
 }
 
-[[nodiscard]] std::string ssh_stub::get_mock_output(const std::string& command) {
+std::string ssh_stub::get_mock_output(const std::string& command) {
     if (command.find("df") != std::string::npos) {
         return "Filesystem      Size  Used Avail Use% Mounted on\n/dev/root        117G   13G  101G  11% /\n";
     }

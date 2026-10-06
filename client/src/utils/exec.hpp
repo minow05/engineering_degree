@@ -11,12 +11,12 @@ struct exec_result {
 };
 
 // Execute command in background and capture stdout/stderr output
-[[nodiscard]] exec_result run_command(const std::string& command);
+exec_result run_command(const std::string& command);
 
 // Execute interactive command with direct TTY terminal passthrough
-[[nodiscard]] int run_interactive(const std::string& command);
+int run_interactive(const std::string& command);
 
 // Check if a system CLI command is available in PATH
-[[nodiscard]] bool has_command(const std::string& cmd_name);
+bool has_command(const std::string& cmd_name);
 
 } // namespace smart_ssh::utils

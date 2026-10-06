@@ -14,7 +14,7 @@ static std::string build_ssh_target(const core::active_session& session) {
     return session.host_alias;
 }
 
-[[nodiscard]] std::string check_cpu_memory_usage(const core::active_session& session) {
+std::string check_cpu_memory_usage(const core::active_session& session) {
     std::string target = build_ssh_target(session);
     std::string cmd = "ssh";
     if (session.port != 22) cmd += " -p " + std::to_string(session.port);
@@ -32,18 +32,21 @@ void run_resource_monitor(const core::active_session& session) {
         ui::print_info("Querying CPU/RAM on " + session.host_alias + "...");
         std::string output = check_cpu_memory_usage(session);
         std::cout << "\n" << output << "\n";
+        ui::wait_for_key();
     });
 
     r_menu.add_item("View Disk Space Usage (df -h)", [&]() {
         ui::print_info("Querying disk usage on " + session.host_alias + "...");
         std::string output = core::check_remote_disk_space(session);
         std::cout << "\n" << output << "\n";
+        ui::wait_for_key();
     });
 
     r_menu.add_item("View User Storage Quota", [&]() {
         ui::print_info("Querying quota for user '" + session.user + "'...");
         std::string output = core::check_remote_quota(session);
         std::cout << "\n" << output << "\n";
+        ui::wait_for_key();
     });
 
     r_menu.run();

@@ -14,7 +14,7 @@
 
 namespace smart_ssh::utils {
 
-[[nodiscard]] exec_result run_command(const std::string& command) {
+exec_result run_command(const std::string& command) {
     exec_result result;
     std::array<char, 256> buffer{};
 
@@ -35,11 +35,11 @@ namespace smart_ssh::utils {
     return result;
 }
 
-[[nodiscard]] int run_interactive(const std::string& command) {
+int run_interactive(const std::string& command) {
     return std::system(command.c_str());
 }
 
-[[nodiscard]] bool has_command(const std::string& cmd_name) {
+bool has_command(const std::string& cmd_name) {
 #ifdef _WIN32
     std::string check_cmd = "where " + cmd_name + " >nul 2>&1";
 #else

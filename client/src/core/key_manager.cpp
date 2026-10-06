@@ -4,7 +4,7 @@
 
 namespace smart_ssh::core {
 
-[[nodiscard]] std::filesystem::path get_ssh_dir() {
+std::filesystem::path get_ssh_dir() {
 #ifdef _WIN32
     const char* user_profile = std::getenv("USERPROFILE");
     if (user_profile) {
@@ -19,7 +19,7 @@ namespace smart_ssh::core {
     return ".ssh";
 }
 
-[[nodiscard]] std::vector<ssh_key_pair> list_keys() {
+std::vector<ssh_key_pair> list_keys() {
     std::vector<ssh_key_pair> keys;
     auto ssh_dir = get_ssh_dir();
     if (!std::filesystem::exists(ssh_dir)) return keys;
@@ -37,10 +37,10 @@ namespace smart_ssh::core {
     return keys;
 }
 
-[[nodiscard]] bool generate_key(const std::string& key_name,
-                                const std::string& comment,
-                                const std::string& passphrase,
-                                const std::string& key_type) {
+bool generate_key(const std::string& key_name,
+                  const std::string& comment,
+                  const std::string& passphrase,
+                  const std::string& key_type) {
     auto ssh_dir = get_ssh_dir();
     std::filesystem::create_directories(ssh_dir);
 
@@ -55,10 +55,10 @@ namespace smart_ssh::core {
     return (exit_code == 0);
 }
 
-[[nodiscard]] bool deploy_public_key(const std::filesystem::path& pub_key_path,
-                                     const std::string& user,
-                                     const std::string& host,
-                                     int port) {
+bool deploy_public_key(const std::filesystem::path& pub_key_path,
+                       const std::string& user,
+                       const std::string& host,
+                       int port) {
 #ifndef _WIN32
     if (utils::has_command("ssh-copy-id")) {
         std::string cmd = "ssh-copy-id -p " + std::to_string(port) + " -i \"" + pub_key_path.string() + "\" " + user + "@" + host;

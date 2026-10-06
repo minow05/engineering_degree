@@ -20,15 +20,15 @@ class ssh_config {
 public:
     explicit ssh_config(std::filesystem::path config_path = get_default_config_path());
 
-    [[nodiscard]] bool load();
-    [[nodiscard]] bool save() const;
+    bool load();
+    bool save() const;
 
-    [[nodiscard]] const std::vector<host_entry>& get_entries() const { return m_entries; }
+    const std::vector<host_entry>& get_entries() const { return m_entries; }
     void add_or_update_entry(const host_entry& entry);
-    [[nodiscard]] bool remove_entry(const std::string& host_alias);
-    [[nodiscard]] const host_entry* find_entry(const std::string& host_alias) const;
+    bool remove_entry(const std::string& host_alias);
+    const host_entry* find_entry(const std::string& host_alias) const;
 
-    [[nodiscard]] static std::filesystem::path get_default_config_path();
+    static std::filesystem::path get_default_config_path();
 
 private:
     std::filesystem::path m_config_path;
