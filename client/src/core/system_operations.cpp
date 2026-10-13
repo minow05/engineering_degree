@@ -3,6 +3,14 @@
 #include <cstdlib>
 #include <algorithm>
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <shellapi.h>
+#endif
+
 namespace smart_ssh::core {
 
 static std::string build_ssh_target(const active_session& session) {
@@ -46,8 +54,14 @@ bool open_samba_share(const active_session& session, const std::string& share_na
 #ifdef _WIN32
     // Primary Target Implementation: Windows Explorer UNC Path
     std::string unc_path = "\\\\" + host + "\\" + share_name;
+    HINSTANCE res = ShellExecuteA(NULL, "open", unc_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+    if (reinterpret_cast<INT_PTR>(res) > 32) {
+        return true;
+    }
+    // Fallback if ShellExecute failed to launch
     std::string cmd = "explorer.exe \"" + unc_path + "\"";
-    return (utils::run_interactive(cmd) == 0);
+    int ret = utils::run_interactive(cmd);
+    return (ret == 0 || ret == 1);
 #elif __APPLE__
     // TODO: Implement native macOS SMB volume mounting via Finder / mount_smbfs
     std::string smb_url = "smb://" + host + "/" + share_name;

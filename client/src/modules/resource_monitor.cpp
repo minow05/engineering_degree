@@ -29,14 +29,14 @@ void run_resource_monitor(const core::active_session& session) {
     ui::menu r_menu("Resource & Quota Monitor (CPU, RAM, Disk)");
 
     r_menu.add_item("View Real-Time CPU & RAM Utilization (Top Processes)", [&]() {
-        ui::print_info("Querying CPU/RAM on " + session.host_alias + "...");
+        ui::print_info("Querying CPU/RAM on " + session.host_address + "...");
         std::string output = check_cpu_memory_usage(session);
         std::cout << "\n" << output << "\n";
         ui::wait_for_key();
     });
 
     r_menu.add_item("View Disk Space Usage (df -h)", [&]() {
-        ui::print_info("Querying disk usage on " + session.host_alias + "...");
+        ui::print_info("Querying disk usage on " + session.host_address + "...");
         std::string output = core::check_remote_disk_space(session);
         std::cout << "\n" << output << "\n";
         ui::wait_for_key();

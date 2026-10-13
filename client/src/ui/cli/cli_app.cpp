@@ -30,7 +30,7 @@ void cli_app::render_main_menu() {
     bool running = true;
     while (running) {
         const auto& session = m_app.get_session();
-        print_header("SmartSSH Client - Bound Host: " + session.host_alias);
+        print_header("SmartSSH Client - Host: " + session.host_address);
 
         if (session.is_connected) {
             print_success("Connected to Host: " + session.user + "@" + session.host_address + ":" + std::to_string(session.port) + " [ONLINE]");
@@ -38,7 +38,7 @@ void cli_app::render_main_menu() {
             print_warning("Target Host Status: " + session.host_address + " [OFFLINE / CHECK KEY & NETWORK]");
         }
 
-        menu main_menu("Instant Host Operations Menu (" + session.host_alias + ")");
+        menu main_menu("Instant Host Operations Menu (" + session.host_address + ")");
 
         main_menu.add_item("Interactive SSH Terminal Shell", [&]() {
             print_info("Launching SSH TTY shell to " + session.user + "@" + session.host_address + "...");
@@ -71,8 +71,7 @@ void cli_app::render_settings_menu() {
 
     settings.add_item("View Local Host Configuration Details", [&]() {
         const auto& data = m_app.get_config().get_data();
-        std::cout << "\nHost Alias:     " << data.host_alias << "\n"
-                  << "Host Address:   " << data.host_address << "\n"
+        std::cout << "\nHost Address:   " << data.host_address << "\n"
                   << "Username:       " << data.username << "\n"
                   << "Port:           " << data.port << "\n"
                   << "Identity File:  " << data.identity_file << "\n\n";

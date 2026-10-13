@@ -13,5 +13,8 @@ target_include_directories(smart_ssh_core PUBLIC
 target_link_libraries(smart_ssh_core PRIVATE
     smart_ssh_utils
 )
+if(WIN32)
+    target_link_libraries(smart_ssh_core PRIVATE shell32)
+endif()
 
 set_target_properties(smart_ssh_core PROPERTIES CXX_STANDARD 20)
