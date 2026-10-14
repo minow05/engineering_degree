@@ -100,6 +100,34 @@ W celu umożliwienia bezszwowego montowania dysków sieciowych na komputerach kl
 * **Demon Inicjalizacji systemd**: Monitoruje demony systemowe (np. `smbd`, `zerotier-one`, `ssh`), pozwalając na zdalny podgląd ich statusu.
 * **Kwoty Dyskowe POSIX**: Limity pamięci masowej użytkowników są kontrolowane przez mechanizm kwot dyskowych Linuksa (`quota -u <username>`), co pozwala monitorować i ograniczać zużycie dysku.
 
+### 2.5 Architektura Portów, Współbieżność Połączeń i Model Wielu Klientów
+
+W architekturze systemu SmartSSH kluczowym zagadnieniem jest obsługa równoczesnych połączeń od wielu użytkowników bez konieczności dynamicznego przydzielania portów czy implementacji dedykowanej puli portów (*port pooling*).
+
+#### 2.5.1 Identyfikacja Połączeń w Modelu TCP/IP (4-krotka Połączenia)
+W protokole TCP pojedyncze logiczne połączenie sieciowe jest jednoznacznie identyfikowane przez **4-krotkę (4-tuple)** w nagłówkach pakietów IP i TCP:
+$$\{\text{Źródłowy Adres IP},\, \text{Źródłowy Port Efemeryczny},\, \text{Docelowy Adres IP Serwera},\, \text{Docelowy Port Usługi}\}$$
+
+* **Port Serwera (Docelowy)**: Usługi systemowe Raspberry Pi nasłuchują na stałych, dobrze znanych portach (OpenSSH: `22`, Samba: `445`). Gniazdo serwera znajduje się w stanie nasłuchiwania (`LISTEN`).
+* **Port Klienta (Źródłowy)**: Podczas nawiązywania połączenia jądro systemu operacyjnego stacji klienckiej przydziela procesowi wolny port z puli portów efemerycznych (zgodnie z IANA: zakres `49152–65535`).
+* **Brak Kolizji Portów**: Gdy dwaj różni użytkownicy (np. z adresów `10.147.19.11` i `10.147.19.12`) lub dwie niezależne instancje aplikacji łączą się równolegle z serwerem Raspberry Pi na port `22`, każde z tych połączeń tworzy unikalne gniazdo w tablicy stanu połączeń jądra Linuksa w stanie `ESTABLISHED`. Nie dochodzi do konfliktu portów po stronie serwera.
+
+#### 2.5.2 Model Współbieżności Usług Serwera (OpenSSH i Samba)
+1. **Wieloprocesowy Model OpenSSH (`sshd`)**:
+   * Główny demon `sshd` działa z uprawnieniami administratora i oczekuje na pakiety `SYN`.
+   * Po zaakceptowaniu połączenia funkcją systemową `accept()`, demon wywołuje `fork()`, tworząc odrębny proces potomny dedykowany wyłącznie tej konkretnej sesji sieciowej.
+   * Proces potomny przeprowadza wymianę kluczy kryptograficznych, dokonuje obniżenia uprawnień (*privilege separation*) i po uwierzytelnieniu kluczem Ed25519 uruchamia powłokę użytkownika w kontekście jego `UID`/`GID`.
+   * Dzięki temu sesje użytkowników są w pełni odizolowane procesowo i pamięciowo.
+
+2. **Współbieżność Demona Samba (`smbd`)**:
+   * Podobnie jak OpenSSH, demon `smbd` tworzy osobny proces lub wątek roboczy dla każdego nawiązanego połączenia SMB (port `445`).
+   * Równoczesny dostęp do udziałów sieciowych jest synchronizowany przez mechanizmy blokad na poziomie jądra Linuksa oraz protokołu SMB (*opportunistic locks / oplocks*).
+
+#### 2.5.3 Analiza Zasadności Dynamicznych Pul Portów
+W trakcie projektowania systemu rozważano ewentualną konieczność dynamicznego zarządzania portami serwera. Wykazano, że:
+* **Pula portów jest zbędna**: Dynamiczne porty po stronie serwera byłyby konieczne wyłącznie w przypadku tunelowania zwrotnego (*SSH Remote Port Forwarding*, flaga `-R`), w którym klienci rezerwują porty nasłuchujące po stronie serwera pod własne usługi. SmartSSH nie wykorzystuje mechanizmu `-R`, lecz bezpośrednie połączenia do usług serwerowych.
+* **Skalowalność**: Standardowe demony Linuksa bez trudu obsługują dziesiątki równoległych połączeń. Ograniczeniem wydajnościowym na platformie Raspberry Pi jest pamięć RAM i czas procesora, a nie dostępność gniazd TCP na porcie `22` czy `445`.
+
 ---
 
 ## 3. Architektura Oprogramowania Klienckiego (`smart-ssh`)
@@ -250,44 +278,22 @@ strip build_release/out/smart-ssh
 
 ## 7. Weryfikacja i Testy Automatyczne
 
-Projekt zawiera automatyczne testy jednostkowe GoogleTest (`gtest`) połączone ze środowiskiem **Atrapy Serwera SSH (`tests::ssh_stub`)**:
+Projekt zawiera automatyczne testy jednostkowe i regresyjne GoogleTest (`gtest`) połączone ze środowiskiem **Atrapy Serwera SSH (`tests::ssh_stub`)**:
 
 ```
-[==========] Running 8 tests from 4 test suites.
-[----------] Global test environment set-up.
-[----------] 5 tests from SSHStubEnvironmentTest
-[ RUN      ] SSHStubEnvironmentTest.StubSessionConnectionActive
-[       OK ] SSHStubEnvironmentTest.StubSessionConnectionActive (2 ms)
-[ RUN      ] SSHStubEnvironmentTest.MockDiskSpaceOutput
-[       OK ] SSHStubEnvironmentTest.MockDiskSpaceOutput (2 ms)
-[ RUN      ] SSHStubEnvironmentTest.MockDockerProcessOutput
-[       OK ] SSHStubEnvironmentTest.MockDockerProcessOutput (2 ms)
-[ RUN      ] SSHStubEnvironmentTest.MockUserQuotaOutput
-[       OK ] SSHStubEnvironmentTest.MockUserQuotaOutput (1 ms)
-[ RUN      ] SSHStubEnvironmentTest.MockFileListingOutput
-[       OK ] SSHStubEnvironmentTest.MockFileListingOutput (2 ms)
-[----------] 5 tests from SSHStubEnvironmentTest (11 ms total)
-
-[----------] 1 test from SmartSSHConfigurationTest
-[ RUN      ] SmartSSHConfigurationTest.SaveLoadAndResetLocalConfig
-[       OK ] SmartSSHConfigurationTest.SaveLoadAndResetLocalConfig (0 ms)
-[----------] 1 test from SmartSSHConfigurationTest (0 ms total)
-
-[----------] 1 test from SmartSSHExecTest
-[ RUN      ] SmartSSHExecTest.CommandExecutionCheck
-[       OK ] SmartSSHExecTest.CommandExecutionCheck (90 ms)
-[----------] 1 test from SmartSSHExecTest (90 ms total)
-
-[----------] 1 test from SmartSSHConfigTest
-[ RUN      ] SmartSSHConfigTest.IsolatedConfigParserAndSave
-[       OK ] SmartSSHConfigTest.IsolatedConfigParserAndSave (1 ms)
-[----------] 1 test from SmartSSHConfigTest (1 ms total)
-
-[----------] Global test environment tear-down
-[==========] 8 tests from 4 test suites ran. (104 ms total)
-[  PASSED  ] 8 tests.
+[==========] Running 31 tests from 11 test suites ran. (2023 ms total)
+[  PASSED  ] 31 tests.
 ```
 
-### Podsumowanie Zestawu Testów
-* **Symulacja Odpowiedzi SSH (Stubbing)**: Przechwytuje wywołania konsolowe OpenSSH i zwraca zamaskowane odpowiedzi dla poleceń `df -h`, `docker ps -a`, `quota -u` oraz `ls -la`. Testy wykonują się w 100% offline w czasie poniżej 200 milisekund.
-* **Weryfikacja Konfiguracji**: Sprawdza cykle tworzenia, odczytu i usuwania pliku `smartssh_config.cfg` w odizolowanych warunkach testowych.
+### Podsumowanie Zestawu Testów (11 Pakietów Testowych)
+* **`FunctionalModuleTest` (4 testy)**: Weryfikacja monitoringu CPU/RAM, formatowania dysków, parsowania limitów kwot dyskowych POSIX oraz pełnego cyklu życia aplikacji.
+* **`SSHStubEnvironmentTest` (5 testów)**: Symulacja odpowiedzi serwera SSH (stubbing) dla dysków, procesów Docker, kwot użytkowników oraz listowania plików.
+* **`SmartSSHConfigurationTest` (1 test)**: Zapis, odczyt i reset pliku konfiguracyjnego.
+* **`SmartSSHExecTest` (1 test)**: Wykonywanie poleceń w podprocesach.
+* **`SmartSSHConfigTest` (1 test)**: Odizolowany parser i generator plików konfiguracji SSH.
+* **`RegressionTest` (6 testów)**: Odporność na uszkodzone pliki konfiguracyjne, niestandardowe i graniczne numery portów, spacje w ścieżkach tożsamości, wielokrotne resety oraz translację aliasów na surowe adresy IP udziałów Samba.
+* **`CoreUnitConfigurationTest` (3 testy)**: Domyślny stan, zapisywanie poprawnych danych i resetowanie konfiguracji.
+* **`CoreUnitSSHConfigTest` (2 testy)**: Dodawanie, modyfikacja i wyszukiwanie wpisów SSH config.
+* **`CoreUnitKeyManagerTest` (2 testy)**: Rozwiązywanie ścieżek katalogu `.ssh` i listowanie kluczy.
+* **`CoreUnitSystemOperationsTest` (2 testy)**: Formatowanie komend sprawdzania dysku i kwot.
+* **`UtilsUnitExecTest` (4 testy)**: Wykonywanie poleceń powłoki, weryfikacja kodów wyjścia oraz obecności narzędzi systemowych.

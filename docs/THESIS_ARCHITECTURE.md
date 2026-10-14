@@ -84,8 +84,24 @@ Unlike multi-host SSH connection managers (e.g. PuTTY, Termius), SmartSSH operat
 
 ---
 
-## 4. Testing & Verification Architecture
+## 4. Network Concurrency & Multi-Client Port Architecture
+
+A critical architectural property of the SmartSSH server environment is concurrent multi-user handling over static ports:
+
+1. **TCP 4-Tuple Demultiplexing**:
+   Connections are uniquely indexed in the Linux kernel by $\{\text{Client IP}, \text{Client Port}, \text{Host IP}, \text{Host Port}\}$.
+   Clients establish connections using ephemeral source ports (`49152–65535`), allowing multiple simultaneous clients to communicate with the host on port `22` (SSH) and port `445` (Samba) without socket contention.
+2. **Daemon Concurrency & Process Isolation**:
+   - **OpenSSH (`sshd`)**: Spawns an isolated child process via `fork()` per active connection. Sessions run under strictly separated POSIX user contexts (`UID`/`GID`) with privilege separation.
+   - **Samba (`smbd`)**: Forks independent processes/threads for incoming SMB sessions, managing concurrent file access through opportunistic locks (*oplocks*).
+3. **No Dynamic Port Pools Required**:
+   Dynamic server port allocation is only needed for SSH reverse tunnels (`ssh -R`), which are not part of SmartSSH's architecture. Direct server-side service bindings handle multi-client load natively.
+
+---
+
+## 5. Testing & Verification Architecture
 
 The project integrates GoogleTest (`smart-ssh-tests`) with an isolated **SSH Stub Environment (`tests::ssh_stub`)**:
+- **31 Automated Tests across 11 Test Suites**: Validates functional modules, configuration resilience, regression scenarios, key management, and system operations.
 - **Deterministic Unit Testing**: Executes 100% offline in <200ms using mock responses for `df -h`, `docker ps`, `quota`, and `ls -la`.
-- **Configuration Tests (`SmartSSHConfigurationTest`)**: Verifies save, load, and reset cycles for single-host configuration files without network side effects.
+- **Configuration & Regression Suites**: Verifies save, load, and reset cycles, handling of spaces in paths, non-standard ports, and Samba alias resolution.

@@ -100,6 +100,34 @@ To provide seamless network drive mounting on Windows and desktop platforms, Sam
 * **systemd Init Daemon**: Monitors background system services (e.g., `smbd`, `zerotier-one`, `ssh`), enabling client-side status inspection.
 * **POSIX Disk Quotas**: User storage allocations are tracked using Linux filesystem quotas (`quota -u <username>`), allowing the client to monitor user disk quotas and enforce storage caps.
 
+### 2.5 Port Architecture, Connection Concurrency & Multi-Client Service Model
+
+A foundational architectural consideration in SmartSSH is the concurrent handling of multiple client connections without requiring dynamic port reservation or dedicated port pooling mechanisms on the server host.
+
+#### 2.5.1 TCP/IP Connection Identification (The 4-Tuple Model)
+In standard TCP/IP networking, every individual logical connection is uniquely distinguished by a **4-tuple** in the IP and TCP headers:
+$$\{\text{Source IP},\, \text{Source Ephemeral Port},\, \text{Destination Server IP},\, \text{Destination Service Port}\}$$
+
+* **Server Destination Port**: Remote Raspberry Pi services listen on static, standardized ports (OpenSSH on port `22`, Samba SMB on port `445`). The server-side listening socket operates in the `LISTEN` state.
+* **Client Source Port**: When a client initiates a connection, the local operating system kernel dynamically assigns an unreserved ephemeral port (typically from the range `49152–65535` according to IANA guidelines).
+* **Elimination of Port Collisions**: When two distinct users (e.g., from IP addresses `10.147.19.11` and `10.147.19.12`) or two independent processes on the same host connect simultaneously to port `22`, each socket is uniquely identified in the Linux kernel connection tracking table in the `ESTABLISHED` state. No server-side port contention occurs.
+
+#### 2.5.2 Concurrency Architecture of Server Daemons
+1. **OpenSSH Multi-Process Model (`sshd`)**:
+   * The master `sshd` daemon runs with administrative privileges and monitors the listening port for incoming `SYN` packets.
+   * Upon accepting a connection via `accept()`, `sshd` executes a `fork()` system call, spawning an isolated child process dedicated specifically to that client session.
+   * The child process completes cryptographic handshake negotiation, applies privilege separation, and—following successful Ed25519 public-key verification—executes user shells and commands within the security context of the user's POSIX `UID`/`GID`.
+   * As a result, user sessions are memory-isolated and process-isolated.
+
+2. **Samba Concurrency Model (`smbd`)**:
+   * Similarly, the `smbd` daemon creates distinct processes or worker threads for each active SMB client connection over port `445`.
+   * Multi-user file access synchronization is managed directly via Linux kernel advisory/mandatory locks and SMB opportunistic locks (*oplocks*).
+
+#### 2.5.3 Evaluation of Dynamic Port Pools
+During system design, the need for dynamic server port allocation or port pooling was evaluated:
+* **Port Pooling is Redundant**: Server-side dynamic port allocation is only required in reverse proxy architectures or SSH remote port forwarding (`ssh -R`), where multiple clients attempt to bind identical listening port numbers on the remote host for forwarded services. SmartSSH uses direct client-to-service sessions, rendering server port pooling unnecessary.
+* **Scalability**: Standard Linux daemons natively support concurrent connections on static ports `22` and `445`. Practical scalability limits on Raspberry Pi hardware are constrained by RAM capacity and CPU time rather than TCP socket constraints.
+
 ---
 
 ## 3. Client Software Architecture (`smart-ssh`)
@@ -250,44 +278,22 @@ strip build_release/out/smart-ssh
 
 ## 7. Verification & Automated Testing
 
-The project incorporates GoogleTest (`gtest`) framework tests paired with an **SSH Stub Environment (`tests::ssh_stub`)**:
+The project incorporates GoogleTest (`gtest`) framework unit and regression tests paired with an **SSH Stub Environment (`tests::ssh_stub`)**:
 
 ```
-[==========] Running 8 tests from 4 test suites.
-[----------] Global test environment set-up.
-[----------] 5 tests from SSHStubEnvironmentTest
-[ RUN      ] SSHStubEnvironmentTest.StubSessionConnectionActive
-[       OK ] SSHStubEnvironmentTest.StubSessionConnectionActive (2 ms)
-[ RUN      ] SSHStubEnvironmentTest.MockDiskSpaceOutput
-[       OK ] SSHStubEnvironmentTest.MockDiskSpaceOutput (2 ms)
-[ RUN      ] SSHStubEnvironmentTest.MockDockerProcessOutput
-[       OK ] SSHStubEnvironmentTest.MockDockerProcessOutput (2 ms)
-[ RUN      ] SSHStubEnvironmentTest.MockUserQuotaOutput
-[       OK ] SSHStubEnvironmentTest.MockUserQuotaOutput (1 ms)
-[ RUN      ] SSHStubEnvironmentTest.MockFileListingOutput
-[       OK ] SSHStubEnvironmentTest.MockFileListingOutput (2 ms)
-[----------] 5 tests from SSHStubEnvironmentTest (11 ms total)
-
-[----------] 1 test from SmartSSHConfigurationTest
-[ RUN      ] SmartSSHConfigurationTest.SaveLoadAndResetLocalConfig
-[       OK ] SmartSSHConfigurationTest.SaveLoadAndResetLocalConfig (0 ms)
-[----------] 1 test from SmartSSHConfigurationTest (0 ms total)
-
-[----------] 1 test from SmartSSHExecTest
-[ RUN      ] SmartSSHExecTest.CommandExecutionCheck
-[       OK ] SmartSSHExecTest.CommandExecutionCheck (90 ms)
-[----------] 1 test from SmartSSHExecTest (90 ms total)
-
-[----------] 1 test from SmartSSHConfigTest
-[ RUN      ] SmartSSHConfigTest.IsolatedConfigParserAndSave
-[       OK ] SmartSSHConfigTest.IsolatedConfigParserAndSave (1 ms)
-[----------] 1 test from SmartSSHConfigTest (1 ms total)
-
-[----------] Global test environment tear-down
-[==========] 8 tests from 4 test suites ran. (104 ms total)
-[  PASSED  ] 8 tests.
+[==========] Running 31 tests from 11 test suites ran. (2023 ms total)
+[  PASSED  ] 31 tests.
 ```
 
-### Test Suite Summary
-* **SSH Stub Mocking**: Intercepts OpenSSH shell calls to return simulated responses for `df -h`, `docker ps -a`, `quota -u`, and `ls -la`. Tests run 100% offline in under 200 milliseconds.
-* **Configuration Verification**: Verifies creation, loading, and deletion cycles of `smartssh_config.cfg` under isolated test conditions.
+### Test Suite Summary (11 Test Suites)
+* **`FunctionalModuleTest` (4 tests)**: Verifies CPU/RAM monitoring, disk formatting, POSIX disk quota parsing, and the full application lifecycle.
+* **`SSHStubEnvironmentTest` (5 tests)**: Simulates SSH server responses (stubbing) for disk space, Docker containers, user quotas, and directory file listings.
+* **`SmartSSHConfigurationTest` (1 test)**: Verifies saving, loading, and resetting configuration files.
+* **`SmartSSHExecTest` (1 test)**: Validates child process command execution.
+* **`SmartSSHConfigTest` (1 test)**: Verifies isolated parsing and generation of OpenSSH configuration files.
+* **`RegressionTest` (6 tests)**: Validates resilience against corrupted configuration files, non-standard/boundary port numbers, whitespace in identity file paths, consecutive reset operations, and Samba alias-to-IP resolution.
+* **`CoreUnitConfigurationTest` (3 tests)**: Verifies default state, saving valid data, and reset cleanup.
+* **`CoreUnitSSHConfigTest` (2 tests)**: Verifies adding, updating, and querying SSH configuration entries.
+* **`CoreUnitKeyManagerTest` (2 tests)**: Verifies `.ssh` path resolution and local key enumeration.
+* **`CoreUnitSystemOperationsTest` (2 tests)**: Verifies command formatting for remote disk and quota checks.
+* **`UtilsUnitExecTest` (4 tests)**: Verifies shell command execution, exit codes, and system tool availability.
