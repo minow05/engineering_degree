@@ -11,32 +11,48 @@ setup_wizard_result setup_wizard::run_interactive_wizard() {
     setup_wizard_result res;
     ui::print_header("SmartSSH First-Run Setup & Configuration Wizard");
 
-    std::string alias = ui::prompt("Enter Host Alias (e.g. minowRPI)");
-    if (alias.empty()) alias = "minowRPI";
-
     std::string address = ui::prompt("Enter Raspberry Pi Address / IP");
     if (address.empty()) address = "172.30.0.1";
 
     std::string username = ui::prompt("Enter Username");
     if (username.empty()) username = "minow";
 
-    res.config_data.host_alias = alias;
+    res.config_data.host_alias = address;
     res.config_data.host_address = address;
     res.config_data.username = username;
     res.config_data.port = 22;
 
     ui::print_header("Step 1: SSH Key Authentication Setup");
-    std::string key_name = "id_ed25519_" + alias;
+    std::string key_name = "id_ed25519_" + address;
     auto ssh_dir = core::get_ssh_dir();
     auto priv_key_path = ssh_dir / key_name;
     auto pub_key_path = ssh_dir / (key_name + ".pub");
 
-    ui::print_info("Generating SSH key pair '" + priv_key_path.string() + "'...");
-    (void)core::generate_key(key_name, username + "@" + alias, "", "ed25519");
+    if (std::filesystem::exists(priv_key_path)) {
+        ui::print_info("Using existing SSH key pair: " + priv_key_path.string());
+    } else {
+        ui::print_info("Generating SSH key pair '" + priv_key_path.string() + "'...");
+        (void)core::generate_key(key_name, username + "@" + address, "", "ed25519");
+    }
     res.config_data.identity_file = priv_key_path.string();
 
     ui::print_info("Deploying public key to " + username + "@" + address + "...");
-    (void)core::deploy_public_key(pub_key_path, username, address);
+    bool deployed = core::deploy_public_key(pub_key_path, username, address);
+    if (!deployed) {
+        ui::print_warning("Direct key deployment to " + username + "@" + address + " failed.");
+        ui::print_info("This usually means user '" + username + "' does not exist yet on the Raspberry Pi.");
+        if (ui::confirm("Would you like to automatically create and provision user '" + username + "' on the Raspberry Pi?", true)) {
+            std::string admin = ui::prompt("Enter existing Admin Username on Raspberry Pi", "minow");
+            std::string samba_pass = ui::prompt_password("Optional password for user '" + username + "' (used for Samba network shares)");
+            if (core::provision_remote_user(admin, address, 22, username, pub_key_path, samba_pass)) {
+                ui::print_success("User '" + username + "' created and provisioned successfully on Raspberry Pi!");
+            } else {
+                ui::print_error("Failed to provision user '" + username + "' on Raspberry Pi.");
+            }
+        }
+    } else {
+        ui::print_success("SSH public key deployed successfully!");
+    }
 
     ui::print_header("Step 2: Connection Verification");
     ui::print_info("Testing connection to " + address + ":22...");

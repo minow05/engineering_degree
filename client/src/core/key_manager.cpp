@@ -1,6 +1,7 @@
 #include "key_manager.hpp"
 #include "utils/exec.hpp"
 #include <cstdlib>
+#include <fstream>
 
 namespace smart_ssh::core {
 
@@ -69,6 +70,37 @@ bool deploy_public_key(const std::filesystem::path& pub_key_path,
     std::string cmd = "ssh -p " + std::to_string(port) + " " + user + "@" + host +
                       " \"mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys\" < \"" +
                       pub_key_path.string() + "\"";
+    return (utils::run_interactive(cmd) == 0);
+}
+
+bool provision_remote_user(const std::string& admin_user,
+                           const std::string& host,
+                           int port,
+                           const std::string& new_user,
+                           const std::filesystem::path& pub_key_path,
+                           const std::string& user_password) {
+    std::string pub_key_content;
+    if (std::filesystem::exists(pub_key_path)) {
+        std::ifstream f(pub_key_path);
+        if (f.is_open()) {
+            std::getline(f, pub_key_content);
+        }
+    }
+
+    std::string script_cmd = "sudo /home/" + admin_user + "/create_user.sh " + new_user +
+                             " '" + pub_key_content + "' '" + user_password + "'";
+
+    std::string inline_fallback = "sudo bash -c 'id -u " + new_user + " >/dev/null 2>&1 || useradd -m -s /bin/bash " + new_user +
+                                  "; chmod 700 /home/" + new_user +
+                                  "; mkdir -p /home/" + new_user + "/.ssh && chmod 700 /home/" + new_user + "/.ssh" +
+                                  "; echo \\\"" + pub_key_content + "\\\" >> /home/" + new_user + "/.ssh/authorized_keys" +
+                                  "; chmod 600 /home/" + new_user + "/.ssh/authorized_keys" +
+                                  "; chown -R " + new_user + ":" + new_user + " /home/" + new_user + "/.ssh'";
+
+    std::string remote_cmd = script_cmd + " || " + inline_fallback;
+    std::string cmd = "ssh -t -p " + std::to_string(port) + " " + admin_user + "@" + host +
+                      " \"" + remote_cmd + "\"";
+
     return (utils::run_interactive(cmd) == 0);
 }
 

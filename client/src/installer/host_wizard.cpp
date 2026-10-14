@@ -9,8 +9,8 @@ wizard_config run_host_wizard() {
 
     ui::print_header("SmartSSH Interactive Host Installer Wizard");
 
-    cfg.host_alias = ui::prompt("Enter Host Alias");
     cfg.host_address = ui::prompt("Enter Host IP / Domain");
+    cfg.host_alias = cfg.host_address;
     cfg.primary_user = ui::prompt("Enter Primary Username");
 
     std::string extra_user = ui::prompt("Enter Additional User to Create");

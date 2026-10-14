@@ -26,4 +26,11 @@ bool deploy_public_key(const std::filesystem::path& pub_key_path,
                        const std::string& host,
                        int port = 22);
 
+bool provision_remote_user(const std::string& admin_user,
+                           const std::string& host,
+                           int port,
+                           const std::string& new_user,
+                           const std::filesystem::path& pub_key_path,
+                           const std::string& user_password = "");
+
 } // namespace smart_ssh::core

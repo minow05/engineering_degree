@@ -4,6 +4,7 @@
 #include "modules/file_manager.hpp"
 #include "modules/process_manager.hpp"
 #include "modules/resource_monitor.hpp"
+#include "core/key_manager.hpp"
 #include <iostream>
 
 namespace smart_ssh::ui::cli {
@@ -75,6 +76,30 @@ void cli_app::render_settings_menu() {
                   << "Username:       " << data.username << "\n"
                   << "Port:           " << data.port << "\n"
                   << "Identity File:  " << data.identity_file << "\n\n";
+        wait_for_key();
+    });
+
+    settings.add_item("Provision / Create New User on Raspberry Pi", [&]() {
+        const auto& session = m_app.get_session();
+        std::string new_user = prompt("Enter new username to create on Raspberry Pi");
+        if (new_user.empty()) {
+            print_error("Username cannot be empty.");
+            wait_for_key();
+            return;
+        }
+
+        std::string samba_pass = prompt_password("Set Samba/Login password for '" + new_user + "' (optional)");
+        std::string admin = prompt("Admin/Sudo username on Raspberry Pi", session.user.empty() ? "minow" : session.user);
+
+        std::string pub_key_input = prompt("Path to public key file to install (optional, leave empty if none)");
+        std::filesystem::path pub_path = pub_key_input.empty() ? std::filesystem::path() : std::filesystem::path(pub_key_input);
+
+        print_info("Connecting via admin '" + admin + "' to provision user '" + new_user + "'...");
+        if (core::provision_remote_user(admin, session.host_address, session.port, new_user, pub_path, samba_pass)) {
+            print_success("User '" + new_user + "' provisioned successfully on Raspberry Pi!");
+        } else {
+            print_error("Failed to provision user '" + new_user + "' on Raspberry Pi.");
+        }
         wait_for_key();
     });
 
