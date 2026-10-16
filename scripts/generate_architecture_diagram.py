@@ -56,24 +56,24 @@ def create_presentation_diagram():
         ax.add_patch(box)
 
         # Section header strip
-        sec_h = 7.0
+        sec_h = 6.8
         sec_hdr = FancyBboxPatch((x, y + h - sec_h), w, sec_h, boxstyle="round,pad=0.15,rounding_size=1.2",
                                  facecolor=header_bg, edgecolor=border_color, linewidth=1.2, zorder=4)
         ax.add_patch(sec_hdr)
 
         # Section header text
         ax.text(x + 2.5, y + h - sec_h/2, sec_title, ha='left', va='center',
-                fontsize=13.5, fontweight='bold', color=border_color, zorder=5)
+                fontsize=13.0, fontweight='bold', color=border_color, zorder=5)
 
         # Bullet points
         start_y = y + h - sec_h - 4.5
-        spacing = (h - sec_h - 7.0) / max(len(bullets), 1)
+        spacing = (h - sec_h - 6.5) / max(len(bullets), 1)
         for i, text in enumerate(bullets):
             cur_y = start_y - i * spacing
-            ax.text(x + 3.0, cur_y, "•", ha='left', va='center',
-                    fontsize=16, fontweight='bold', color=border_color, zorder=5)
-            ax.text(x + 5.5, cur_y, text, ha='left', va='center',
-                    fontsize=12.5, fontweight='bold', color=c_text_dark, zorder=5)
+            ax.text(x + 2.8, cur_y, "•", ha='left', va='center',
+                    fontsize=15, fontweight='bold', color=border_color, zorder=5)
+            ax.text(x + 5.2, cur_y, text, ha='left', va='center',
+                    fontsize=12.2, fontweight='bold', color=c_text_dark, zorder=5)
 
     # ==========================================================
     # 1. LEFT CONTAINER: Urządzenie Użytkownika (UE) [x=3.0, w=36.5]
@@ -82,24 +82,25 @@ def create_presentation_diagram():
                    border_color=c_ue_border, bg_color=c_ue_bg, header_color=c_ue_header,
                    title="Urządzenie Użytkownika (UE)")
 
-    # UE Section 1: Aplikacja kliencka (y=47 to 77, h=30)
-    draw_section_box(x=5.2, y=47, w=32.0, h=30,
+    # UE Section 1: Aplikacja SmartSSH & Narzędzia (y=37 to 77, h=40) - MAIN FOCUS
+    draw_section_box(x=5.2, y=37, w=32.0, h=40,
                      header_bg=c_ue_inner, border_color=c_ue_border,
                      sec_title="Aplikacja Kliencka (SmartSSH)",
                      bullets=[
-                         "Połączenie SSH (zdalna konsola)",
-                         "Zarządzanie kluczem (Ed25519)",
-                         "Dostęp do plików i zasobów"
+                         "Interaktywny terminal SSH (Port 22)",
+                         "Zarządzanie kluczem Ed25519 (bez hasła)",
+                         "Zdalny dysk sieciowy Samba (Port 445)",
+                         "Podgląd telemetrii serwera (CPU, RAM)",
+                         "Monitoring limitów dyskowych (Quota)"
                      ])
 
-    # UE Section 2: ZeroTier One (y=13 to 44, h=31)
-    draw_section_box(x=5.2, y=13, w=32.0, h=31,
+    # UE Section 2: Warstwa Łączności Sieciowej (y=13 to 34, h=21)
+    draw_section_box(x=5.2, y=13, w=32.0, h=21,
                      header_bg='#EDE9FE', border_color=c_vpn_border,
-                     sec_title="ZeroTier One",
+                     sec_title="Łączność Sieciowa (VPN)",
                      bullets=[
-                         "Wirtualna sieć prywatna (VPN)",
-                         "Warstwy L2 i L3 w sieci",
-                         "Wirtualna karta sieciowa (zt0)"
+                         "Wirtualna karta sieciowa (ZeroTier)",
+                         "Bezpośrednie połączenie P2P przez Internet"
                      ])
 
     # ==========================================================
@@ -109,31 +110,31 @@ def create_presentation_diagram():
                    border_color=c_rpi_border, bg_color=c_rpi_bg, header_color=c_rpi_header,
                    title="Serwer Raspberry Pi 5")
 
-    # RPi5 Section 1: Zasoby i Usługi (y=47 to 77, h=30)
-    draw_section_box(x=62.8, y=47, w=32.0, h=30,
+    # RPi5 Section 1: Zasoby, Usługi i Dysk (y=37 to 77, h=40) - MAIN FOCUS
+    draw_section_box(x=62.8, y=37, w=32.0, h=40,
                      header_bg=c_rpi_inner, border_color=c_rpi_border,
                      sec_title="Zasoby i Usługi Systemowe",
                      bullets=[
-                         "Prywatny dysk sieciowy (Samba)",
-                         "Wielodostęp użytkowników",
+                         "Prywatny dysk sieciowy (Samba 4)",
+                         "Wielodostęp i izolacja użytkowników",
                          "Serwer OpenSSH (bezpieczny terminal)",
-                         "Usługi Docker i monitoring zasobów"
+                         "Środowisko kontenerów Docker",
+                         "Kontrola limitów dysku (POSIX Quotas)"
                      ])
 
-    # RPi5 Section 2: ZeroTier One (y=13 to 44, h=31)
-    draw_section_box(x=62.8, y=13, w=32.0, h=31,
+    # RPi5 Section 2: Środowisko Sieciowe (y=13 to 34, h=21)
+    draw_section_box(x=62.8, y=13, w=32.0, h=21,
                      header_bg='#EDE9FE', border_color=c_vpn_border,
-                     sec_title="ZeroTier One",
+                     sec_title="Łączność Sieciowa (VPN)",
                      bullets=[
-                         "Wirtualna sieć prywatna (VPN)",
-                         "Warstwy L2 i L3 w sieci",
-                         "Wirtualna karta sieciowa (zt0)"
+                         "Wirtualna karta sieciowa (ZeroTier)",
+                         "Stały adres IP w bezpiecznej podsieci"
                      ])
 
     # ==========================================================
     # 3. MIDDLE: JEDNA WYRAŹNA STRZAŁKA (SZYFROWANY TUNEL)
     # ==========================================================
-    arrow_y = 45.0
+    arrow_y = 47.0
 
     # Prominent single arrow pointing from UE to RPi 5
     arrow_style = ArrowStyle("->", head_length=8, head_width=5.5)
@@ -143,9 +144,9 @@ def create_presentation_diagram():
     ax.add_patch(tunnel_arrow)
 
     # Info card placed cleanly over the arrow shaft
-    card_w = 14.0
-    card_h = 22.0
-    card_x = 50.0 - card_w / 2  # x=43.0 to 57.0 (arrowhead at 60.2 is completely visible!)
+    card_w = 15.0
+    card_h = 26.0
+    card_x = 50.0 - card_w / 2  # x=42.5 to 57.5 (arrowhead at 60.2 is clearly visible!)
     card_y = arrow_y - card_h / 2
 
     tunnel_card = FancyBboxPatch((card_x, card_y), card_w, card_h,
@@ -154,7 +155,7 @@ def create_presentation_diagram():
     ax.add_patch(tunnel_card)
 
     # Header strip inside tunnel badge
-    badge_hdr_h = 6.0
+    badge_hdr_h = 6.2
     badge_hdr = FancyBboxPatch((card_x, card_y + card_h - badge_hdr_h), card_w, badge_hdr_h,
                                boxstyle="round,pad=0.1,rounding_size=1.0",
                                facecolor=c_vpn_bg, edgecolor=c_vpn_border, linewidth=1.2, zorder=8)
@@ -162,14 +163,21 @@ def create_presentation_diagram():
 
     # Tunnel Badge Text
     ax.text(50.0, card_y + card_h - badge_hdr_h/2, "Szyfrowany Tunel", ha='center', va='center',
-            fontsize=11.5, fontweight='bold', color=c_vpn_border, zorder=9)
+            fontsize=12.0, fontweight='bold', color=c_vpn_border, zorder=9)
 
-    ax.text(50.0, card_y + 11.2, "Szyfrowanie", ha='center', va='center',
-            fontsize=11.0, fontweight='bold', color=c_text_dark, zorder=9)
-    ax.text(50.0, card_y + 7.5, "End-to-End", ha='center', va='center',
-            fontsize=10.5, fontweight='bold', color=c_vpn_border, zorder=9)
-    ax.text(50.0, card_y + 3.5, "ChaCha20-Poly1305", ha='center', va='center',
-            fontsize=8.5, family='monospace', color=c_text_muted, zorder=9)
+    # Bullet points on tunnel badge highlighting actual protocols, not just VPN
+    ax.text(50.0, card_y + 15.2, "SSH & Samba", ha='center', va='center',
+            fontsize=11.5, fontweight='bold', color=c_text_dark, zorder=9)
+    ax.text(50.0, card_y + 11.8, "Port 22  •  Port 445", ha='center', va='center',
+            fontsize=10.0, fontweight='bold', color=c_ue_border, zorder=9)
+
+    ax.plot([card_x + 1.5, card_x + card_w - 1.5], [card_y + 9.5, card_y + 9.5],
+            color='#DDD6FE', linewidth=1.2, zorder=9)
+
+    ax.text(50.0, card_y + 6.8, "Szyfrowanie End-to-End", ha='center', va='center',
+            fontsize=9.8, fontweight='bold', color=c_vpn_border, zorder=9)
+    ax.text(50.0, card_y + 3.2, "Ed25519 • ChaCha20", ha='center', va='center',
+            fontsize=9.0, family='monospace', color=c_text_muted, zorder=9)
 
     # Save to outputs
     plt.tight_layout()
@@ -179,7 +187,7 @@ def create_presentation_diagram():
     plt.savefig(svg_path, format='svg', bbox_inches='tight', pad_inches=0.05)
     plt.savefig(png_path, format='jpg', dpi=300, bbox_inches='tight', pad_inches=0.05)
     plt.close()
-    print("Generated 2-box + 1-arrow diagram to:", svg_path, "and", png_path)
+    print("Generated balanced presentation diagram to:", svg_path, "and", png_path)
 
 if __name__ == '__main__':
     create_presentation_diagram()
