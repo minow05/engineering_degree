@@ -28,6 +28,8 @@ Architektura systemu obejmuje dwa główne środowiska wykonawcze:
 
 Infrastruktura serwerowa opiera się na wydajnych, standardowych usługach sieciowych i magazynowych wdrożonych w systemie Raspberry Pi OS.
 
+![Architektura Systemu SmartSSH](images/smartssh_architecture_diagram.jpg)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      Platforma Serwerowa Raspberry Pi                   │

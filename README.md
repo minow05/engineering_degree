@@ -5,6 +5,8 @@
 
 Cross-platform C++20 client application for secure remote file resource access, Samba network storage management, POSIX disk quota monitoring, and ZeroTier P2P VPN encrypted connectivity on Raspberry Pi host servers.
 
+![SmartSSH System Architecture](docs/images/smartssh_architecture_diagram.jpg)
+
 ---
 
 ## 🛠️ How to Build

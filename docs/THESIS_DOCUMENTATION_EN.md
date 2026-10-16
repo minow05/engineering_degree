@@ -28,6 +28,8 @@ The software architecture consists of two primary operational domains:
 
 The server infrastructure relies on lightweight, industry-standard Linux networking and storage daemon services hosted on Raspberry Pi OS.
 
+![SmartSSH System Architecture](images/smartssh_architecture_diagram.jpg)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      Raspberry Pi Host Platform                         │

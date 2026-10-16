@@ -15,6 +15,8 @@ Unlike multi-host SSH connection managers (e.g. PuTTY, Termius), SmartSSH operat
 * Once configured, the local application persists its configuration (`smartssh_config.cfg`) and directly connects to the bound Raspberry Pi host on subsequent launches without prompting the user.
 * Reconfiguration or binding to a different server is accomplished explicitly via **Settings → Reset Configuration**, which clears local client binding while leaving all remote Raspberry Pi files intact.
 
+![SmartSSH System Architecture](images/smartssh_architecture_diagram.jpg)
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     SmartSSH Client                     │
