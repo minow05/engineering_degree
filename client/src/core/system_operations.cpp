@@ -37,7 +37,7 @@ std::string check_remote_quota(const active_session& session) {
     std::string cmd = "ssh";
     if (session.port != 22) cmd += " -p " + std::to_string(session.port);
     if (!session.identity_file.empty()) cmd += " -i \"" + session.identity_file + "\"";
-    cmd += " " + target + " \"quota -u " + user + " 2>/dev/null || du -sh /home/" + user + "\"";
+    cmd += " " + target + " \"sh -c 'quota -u " + user + " 2>/dev/null || du -sh /home/" + user + " 2>/dev/null || echo Brak danych'\"";
 
     auto res = utils::run_command(cmd);
     return res.stdout_str;

@@ -19,7 +19,7 @@ std::string check_cpu_memory_usage(const core::active_session& session) {
     std::string cmd = "ssh";
     if (session.port != 22) cmd += " -p " + std::to_string(session.port);
     if (!session.identity_file.empty()) cmd += " -i \"" + session.identity_file + "\"";
-    cmd += " " + target + " \"ps aux --sort=-%cpu | head -n 12; echo ''; free -h\"";
+    cmd += " " + target + " \"sh -c 'ps aux --sort=-%cpu | head -n 12; echo \"\"; free -h'\"";
 
     auto res = utils::run_command(cmd);
     return res.stdout_str;

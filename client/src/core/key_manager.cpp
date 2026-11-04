@@ -67,9 +67,24 @@ bool deploy_public_key(const std::filesystem::path& pub_key_path,
     }
 #endif
 
+    std::string pub_content;
+    if (std::filesystem::exists(pub_key_path)) {
+        std::ifstream f(pub_key_path);
+        if (f.is_open()) {
+            std::getline(f, pub_content);
+        }
+    }
+    while (!pub_content.empty() && (pub_content.back() == '\r' || pub_content.back() == '\n' || pub_content.back() == ' ')) {
+        pub_content.pop_back();
+    }
+
+    if (pub_content.empty()) {
+        return false;
+    }
+
+    // Embed key directly into sh -c command to allow interactive keyboard password entry on Windows without stdin redirection conflicts
     std::string cmd = "ssh -p " + std::to_string(port) + " " + user + "@" + host +
-                      " \"mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys\" < \"" +
-                      pub_key_path.string() + "\"";
+                      " \"sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo \\\"" + pub_content + "\\\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'\"";
     return (utils::run_interactive(cmd) == 0);
 }
 
