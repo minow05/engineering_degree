@@ -100,7 +100,10 @@ To provide seamless network drive mounting on Windows and desktop platforms, Sam
 
 ### 2.4 Containerization & System Management
 * **Docker Container Runtime**: Manages lightweight microservices hosted on the Pi. The client application inspects running containers via `docker ps -a`, retrieves logs with `docker logs`, and executes lifecycle state transitions (`docker start`, `stop`, `restart`).
-* **systemd Init Daemon**: Monitors background system services (e.g., `smbd`, `zerotier-one`, `ssh`), enabling client-side status inspection.
+* **systemd Init Daemon & Autonomous Startup Watchdog (Self-Healing Watchdog)**:
+  * Monitors and supervises essential system daemons (`smbd`, `zerotier-one`, `dnsmasq`, `ssh`).
+  * Features a dedicated startup healthcheck unit `smartssh-startup-healthcheck.service` (`/etc/systemd/system/smartssh-startup-healthcheck.service`) executing during server boot (`multi-user.target`).
+  * If any critical service (`smbd`, `zerotier-one`, `dnsmasq`) fails to reach an active running state, the watchdog automatically executes up to 3 restart cycles (`systemctl restart <service>`) with inter-attempt backoff and verification, guaranteeing resilient hands-free self-recovery across hardware reboots.
 * **POSIX Disk Quotas**: User storage allocations are tracked using Linux filesystem quotas (`quota -u <username>`), allowing the client to monitor user disk quotas and enforce storage caps.
 
 ### 2.5 Port Architecture, Connection Concurrency & Multi-Client Service Model

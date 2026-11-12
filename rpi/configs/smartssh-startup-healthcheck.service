@@ -1,0 +1,15 @@
+[Unit]
+Description=SmartSSH Startup Services Healthcheck and Self-Healing Watchdog
+After=network-online.target multi-user.target smbd.service zerotier-one.service dnsmasq.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/local/bin/check_services_startup.sh
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target

@@ -100,7 +100,10 @@ W celu umożliwienia bezszwowego montowania dysków sieciowych na komputerach kl
 
 ### 2.4 Konteneryzacja i Zarządzanie Systemem
 * **Środowisko Uruchomieniowe Docker**: Odpowiada za kontenerowe mikrousługi na Raspberry Pi. Aplikacja kliencka umożliwia podgląd aktywnych kontenerów (`docker ps -a`), pobieranie logów (`docker logs`) oraz wykonywanie operacji cyklu życia (`docker start`, `stop`, `restart`).
-* **Demon Inicjalizacji systemd**: Monitoruje demony systemowe (np. `smbd`, `zerotier-one`, `ssh`), pozwalając na zdalny podgląd ich statusu.
+* **Demon Inicjalizacji systemd & Autonomiczny Watchdog Usług (Self-Healing Watchdog)**: 
+  * Monitoruje i nadzoruje kluczowe demony systemowe (`smbd`, `zerotier-one`, `dnsmasq`, `ssh`).
+  * Wdrożono dedykowaną jednostkę startową `smartssh-startup-healthcheck.service` (`/etc/systemd/system/smartssh-startup-healthcheck.service`), która przy każdym uruchomieniu serwera (faza startowa `multi-user.target`) weryfikuje status krytycznych usług (`systemctl is-active`).
+  * W razie wykrycia awarii którejkolwiek z usług (`smbd`, `zerotier-one`, `dnsmasq`), mechanizm podejmuje do 3 prób automatycznego restartu (`systemctl restart <service>`) z 2-sekundowym odstępem i walidacją przywrócenia sprawności, eliminując ryzyko przestoju serwera po restarcie sprzętowym.
 * **Kwoty Dyskowe POSIX**: Limity pamięci masowej użytkowników są kontrolowane przez mechanizm kwot dyskowych Linuksa (`quota -u <username>`), co pozwala monitorować i ograniczać zużycie dysku.
 
 ### 2.5 Architektura Portów, Współbieżność Połączeń i Model Wielu Klientów
