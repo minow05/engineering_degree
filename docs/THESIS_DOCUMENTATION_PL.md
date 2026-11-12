@@ -49,7 +49,7 @@ Infrastruktura serwerowa opiera się na wydajnych, standardowych usługach sieci
 │  ┌─────────────────┐       ┌─────────────────┐     ┌─────────────────┐  │
 │  │ Izolacja Użytk. │       │ Samba SMB/CIFS  │     │ Srodowisko Docker│  │
 │  │ /home/minow     │       │ Udziały Szyfr.  │     │ & Usługi systemd│  │
-│  │ /home/rachel    │       │ /home/*/shared  │     │ Kontrola Procesu│  │
+│  │ /home/rachel    │       │ /home/shared    │     │ Kontrola Procesu│  │
 │  └─────────────────┘       └─────────────────┘     └─────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -68,8 +68,9 @@ W celu umożliwienia bezszwowego montowania dysków sieciowych na komputerach kl
 * **Izolacja Katalogów Użytkowników**:
   * Użytkownik `minow`: Prywatny katalog domowy `/home/minow`.
   * Użytkownik `rachel`: Prywatny katalog domowy `/home/rachel`.
-* **Współdzielony Magazyn Administratora**:
-  * Udział współdzielony `/home/minow/shared` umieszczony jest w ścieżce domowej głównego administratora (`minow`), co daje pełną kontrolę zarządczą, możliwość audytu oraz zarządzania uprawnieniami do plików publicznych.
+* **Współdzielony Magazyn Danych (Shared Storage)**:
+  * Udział współdzielony `/home/shared` zlokalizowany jest bezpośrednio w gałęzi `/home` jako czysty katalog pamięci masowej (bez tworzenia odrębnego konta użytkownika `shared`).
+  * Uprawnienia są zarządzane na poziomie POSIX (bit SGID `2775`/`2777` zapewniający automatyczne dziedziczenie grupy dla nowo tworzonych plików) oraz na poziomie serwera SMB (`valid users = minow rachel`), co uniezależnia pamięć wspólną od prywatnych katalogów domowych.
 * **Wfragment Konfiguracji Samba (`/etc/samba/smb.conf`)**:
   ```ini
   [minow]
@@ -89,7 +90,7 @@ W celu umożliwienia bezszwowego montowania dysków sieciowych na komputerach kl
       force directory mode = 0700
 
   [shared]
-      path = /home/minow/shared
+      path = /home/shared
       valid users = minow rachel
       read only = no
       browsable = yes

@@ -10,15 +10,15 @@
    max log size = 1000
    panic action = /usr/share/samba/panic-action %d
 
-[SharedStorage]
+[shared]
    comment = Shared Network Storage for All Users
-   path = /srv/shared
+   path = /home/shared
    browseable = yes
    read only = no
    guest ok = no
-   create mask = 0775
-   directory mask = 0775
-   valid users = @ssh-shared
+   create mask = 0777
+   directory mask = 0777
+   valid users = @users
 
 [Homes]
    comment = Isolated User Home Directories

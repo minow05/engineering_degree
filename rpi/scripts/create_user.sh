@@ -69,12 +69,24 @@ EOF
         echo "[+] Added Samba share '[$NEW_USER]' in $SMB_CONF."
     fi
 
-    # Add user to [shared] valid users if not present
-    if grep -q "^\[shared\]" "$SMB_CONF"; then
-        if ! grep -A 8 "^\[shared\]" "$SMB_CONF" | grep -q "$NEW_USER"; then
-            sed -i "/^\[shared\]/,/^\[/ s/valid users = .*/& $NEW_USER/" "$SMB_CONF"
-            echo "[+] Added '$NEW_USER' to [shared] Samba share."
-        fi
+    # Add user to [shared] valid users if present, or initialize [shared] at /home/shared
+    if ! grep -q "^\[shared\]" "$SMB_CONF"; then
+        mkdir -p /home/shared
+        chmod 2777 /home/shared
+        cat >> "$SMB_CONF" <<EOF
+
+[shared]
+   path = /home/shared
+   browseable = yes
+   read only = no
+   valid users = $NEW_USER
+   create mask = 0777
+   directory mask = 0777
+EOF
+        echo "[+] Initialized global [shared] Samba share at /home/shared."
+    elif ! grep -A 8 "^\[shared\]" "$SMB_CONF" | grep -q "$NEW_USER"; then
+        sed -i "/^\[shared\]/,/^\[/ s/valid users = .*/& $NEW_USER/" "$SMB_CONF"
+        echo "[+] Added '$NEW_USER' to [shared] Samba share."
     fi
 
     # Set Samba password if provided

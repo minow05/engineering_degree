@@ -3,6 +3,7 @@
 #include "core/key_manager.hpp"
 #include "core/ssh_config.hpp"
 #include "core/connection_manager.hpp"
+#include "core/system_operations.hpp"
 #include <iostream>
 
 namespace smart_ssh::installer {
@@ -37,13 +38,14 @@ setup_wizard_result setup_wizard::run_interactive_wizard() {
     res.config_data.identity_file = priv_key_path.string();
 
     ui::print_info("Deploying public key to " + username + "@" + address + "...");
+    std::string samba_pass;
     bool deployed = core::deploy_public_key(pub_key_path, username, address);
     if (!deployed) {
         ui::print_warning("Direct key deployment to " + username + "@" + address + " failed.");
         ui::print_info("This usually means user '" + username + "' does not exist yet on the Raspberry Pi.");
         if (ui::confirm("Would you like to automatically create and provision user '" + username + "' on the Raspberry Pi?", true)) {
             std::string admin = ui::prompt("Enter existing Admin Username on Raspberry Pi", "minow");
-            std::string samba_pass = ui::prompt_password("Optional password for user '" + username + "' (used for Samba network shares)");
+            samba_pass = ui::prompt_password("Optional password for user '" + username + "' (used for Samba network shares)");
             if (core::provision_remote_user(admin, address, 22, username, pub_key_path, samba_pass)) {
                 ui::print_success("User '" + username + "' created and provisioned successfully on Raspberry Pi!");
             } else {
@@ -60,6 +62,36 @@ setup_wizard_result setup_wizard::run_interactive_wizard() {
         ui::print_success("Connection to Raspberry Pi verified successfully!");
     } else {
         ui::print_warning("Connection check timed out or host unreachable. Setup will continue.");
+    }
+
+    ui::print_header("Step 3: Network Storage (Samba) Drive Mounting");
+    if (ui::confirm("Mount Samba network drives (Home & Shared) on this computer?", true)) {
+        core::active_session smb_sess;
+        smb_sess.host_alias = address;
+        smb_sess.host_address = address;
+        smb_sess.user = username;
+        smb_sess.port = 22;
+
+        std::string home_mnt = core::get_mounted_samba_path(smb_sess, username);
+        std::string shared_mnt = core::get_mounted_samba_path(smb_sess, "shared");
+
+        if ((home_mnt.empty() || shared_mnt.empty()) && samba_pass.empty()) {
+            samba_pass = ui::prompt_password("Enter Samba password for '" + username + "' (leave empty to use OS credentials)");
+        }
+
+        home_mnt = core::mount_samba_share(smb_sess, username, samba_pass);
+        if (!home_mnt.empty()) {
+            ui::print_success("Home Samba drive mounted at: " + home_mnt);
+        } else {
+            ui::print_warning("Could not auto-mount Home Samba drive (verify Samba service or credentials).");
+        }
+
+        shared_mnt = core::mount_samba_share(smb_sess, "shared", samba_pass);
+        if (!shared_mnt.empty()) {
+            ui::print_success("Shared Samba drive mounted at: " + shared_mnt);
+        } else {
+            ui::print_warning("Could not auto-mount Shared Samba drive (verify Samba service or credentials).");
+        }
     }
 
     res.config_data.is_configured = true;

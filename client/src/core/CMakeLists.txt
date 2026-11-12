@@ -14,7 +14,7 @@ target_link_libraries(smart_ssh_core PRIVATE
     smart_ssh_utils
 )
 if(WIN32)
-    target_link_libraries(smart_ssh_core PRIVATE shell32)
+    target_link_libraries(smart_ssh_core PRIVATE shell32 mpr)
 endif()
 
 set_target_properties(smart_ssh_core PROPERTIES CXX_STANDARD 20)

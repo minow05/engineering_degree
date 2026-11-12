@@ -49,7 +49,7 @@ The server infrastructure relies on lightweight, industry-standard Linux network
 │  ┌─────────────────┐       ┌─────────────────┐     ┌─────────────────┐  │
 │  │ User Isolation  │       │ Samba SMB/CIFS  │     │ Docker Runtime  │  │
 │  │ /home/minow     │       │ Encrypted Shares│     │ & systemd Units │  │
-│  │ /home/rachel    │       │ /home/*/shared  │     │ Process Control │  │
+│  │ /home/rachel    │       │ /home/shared    │     │ Process Control │  │
 │  └─────────────────┘       └─────────────────┘     └─────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -68,8 +68,9 @@ To provide seamless network drive mounting on Windows and desktop platforms, Sam
 * **User Directory Isolation**:
   * User `minow`: Private home directory mapped to `/home/minow`.
   * User `rachel`: Private home directory mapped to `/home/rachel`.
-* **Administrator Shared Storage**:
-  * Shared directory `/home/minow/shared` is co-located in the primary administrator's home path (`minow`), granting complete administrative control, permission management, and audit capability over public/shared files.
+* **Global Shared Storage (Multi-User Partition)**:
+  * Shared directory `/home/shared` is co-located directly in the `/home` filesystem hierarchy as a dedicated shared storage folder (without creating a superfluous `shared` Linux user account).
+  * Access control and concurrent write permissions are maintained via POSIX SGID permissions (`2775`/`2777`) and Samba access lists (`valid users = minow rachel`), cleanly separating shared collaboration space from private user home roots.
 * **Samba Configuration (`/etc/samba/smb.conf`) Snippet**:
   ```ini
   [minow]
@@ -89,7 +90,7 @@ To provide seamless network drive mounting on Windows and desktop platforms, Sam
       force directory mode = 0700
 
   [shared]
-      path = /home/minow/shared
+      path = /home/shared
       valid users = minow rachel
       read only = no
       browsable = yes

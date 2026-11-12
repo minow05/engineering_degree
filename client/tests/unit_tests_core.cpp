@@ -166,3 +166,17 @@ TEST(CoreUnitSystemOperationsTest, CheckRemoteQuotaCommandFormatting) {
     std::string mock_output = stub.get_mock_output("quota");
     EXPECT_NE(mock_output.find("mockuser"), std::string::npos);
 }
+
+TEST(CoreUnitSystemOperationsTest, ResolveSambaHostAndMountLookup) {
+    core::active_session session;
+    session.host_address = "minow.rpi";
+    EXPECT_EQ(core::resolve_samba_host(session), "172.30.0.1");
+
+    session.host_address = "10.147.19.50";
+    EXPECT_EQ(core::resolve_samba_host(session), "10.147.19.50");
+
+    // Non-existent host/share should cleanly return empty string without mounting side effects
+    session.host_address = "192.0.2.254";
+    EXPECT_TRUE(core::get_mounted_samba_path(session, "nonexistent_share_xyz").empty());
+    EXPECT_FALSE(core::unmount_samba_share(session, "nonexistent_share_xyz"));
+}

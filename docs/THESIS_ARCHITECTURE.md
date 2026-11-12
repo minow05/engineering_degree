@@ -49,7 +49,7 @@ Unlike multi-host SSH connection managers (e.g. PuTTY, Termius), SmartSSH operat
 │                                                         │
 │  - Linux Kernel & OpenSSH Server                        │
 │  - Isolated User Homes (/home/<user>)                   │
-│  - Samba Encrypted SMB Shares (/home/<user>/shared)     │
+│  - Samba Encrypted SMB Shares (/home/<user> & /home/shared)│
 │  - Docker Container Runtime & systemd Services          │
 │  - Linux Storage Quotas (quota -u)                      │
 └─────────────────────────────────────────────────────────┘

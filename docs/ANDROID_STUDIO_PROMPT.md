@@ -44,7 +44,7 @@ Serwer Raspberry Pi (Raspberry Pi OS / Debian Linux) posiada:
 * **ZeroTier VPN**: Bezpieczny, szyfrowany kanał P2P (wirtualna karta `zt0`, np. `10.147.19.x`).
 * **Samba 4 (SMB/CIFS)**:
   * Udział prywatny użytkownika: `\\<IP>\<username>` (ścieżka `/home/<username>`)
-  * Udział współdzielony: `\\<IP>\shared` (ścieżka `/home/minow/shared`, grupa `ssh-users`)
+  * Udział współdzielony: `\\<IP>\shared` (ścieżka `/home/shared`, uprawnienia SGID `2777` dla autoryzowanych użytkowników)
 * **Telemetria i zasoby**:
   * Dysk: `df -h /`
   * Obciążenie CPU i RAM: `ps aux --sort=-%cpu | head -n 12` oraz `free -h`
