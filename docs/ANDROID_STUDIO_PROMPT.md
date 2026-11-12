@@ -14,7 +14,7 @@ Aplikacja **NIE JEST** ogólnym menedżerem setek połączeń SSH (jak Termius c
    * Wykrycie braku lokalnej konfiguracji i uruchomienie kreatora.
    * Pobranie: Adres IP/domena Raspberry Pi, Port SSH (domyślnie `22`), Nazwa użytkownika (np. `minow`).
    * **Obsługa kluczy SSH Ed25519**: Wygenerowanie asymetrycznej pary kluczy `Ed25519` w aplikacji mobilnej i zapisanie klucza prywatnego w bezpiecznym magazynie (`Android Keystore` / `EncryptedSharedPreferences`). Udostępnienie klucza publicznego (kopiowanie do schowka lub jednorazowy transfer hasłem za pomocą SSH).
-   * **Zdalne tworzenie użytkownika (Remote User Provisioning)**: Jeśli podany użytkownik jeszcze nie istnieje na Raspberry Pi, kreator umożliwia jego automatyczne utworzenie na serwerze (poprzez wywołanie skryptu administracyjnego `sudo /home/minow/create_user.sh <username>` lub komendy `sudo useradd -m -s /bin/bash -G ssh-users <username>` z autoryzacją kontem administratora).
+   * **Zdalne tworzenie użytkownika (Remote User Provisioning)**: Jeśli podany użytkownik jeszcze nie istnieje na Raspberry Pi, kreator umożliwia jego automatyczne utworzenie na serwerze (poprzez wywołanie skryptu administracyjnego `sudo /home/shared/create_user.sh <username>` lub komendy `sudo useradd -m -s /bin/bash -G ssh-users <username>` z autoryzacją kontem administratora).
    * **Weryfikacja**: Szybki test połączenia TCP na porcie 22 i test sesji SSH.
 3. **Trwałość wiązania**: Po ukończeniu konfiguracji stan zostaje zapisany w `EncryptedSharedPreferences` / `DataStore`. Każde kolejne uruchomienie aplikacji wchodzi bezpośrednio do **Ekranu Głównego (Dashboard)** bez pytania o adres IP.
 4. **Reset konfiguracji (Settings)**: Opcja *"Reset Configuration"* usuwa wyłącznie lokalny plik/dane konfiguracyjne aplikacji i cofa do Setup Wizarda. **Nigdy** nie usuwa żadnych danych ze zdalnego serwera Raspberry Pi.
@@ -49,7 +49,7 @@ Serwer Raspberry Pi (Raspberry Pi OS / Debian Linux) posiada:
   * Dysk: `df -h /`
   * Obciążenie CPU i RAM: `ps aux --sort=-%cpu | head -n 12` oraz `free -h`
   * Limity kwot dyskowych: `quota -u <username>` (lub fallback `du -sh /home/<username>`)
-  * Skrypt tworzenia użytkownika: `/home/minow/create_user.sh <username>`
+  * Skrypt tworzenia użytkownika: `/home/shared/create_user.sh <username>`
 
 ---
 

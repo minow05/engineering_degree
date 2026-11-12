@@ -102,8 +102,10 @@ bool provision_remote_user(const std::string& admin_user,
         }
     }
 
-    std::string script_cmd = "sudo /home/" + admin_user + "/create_user.sh " + new_user +
-                             " '" + pub_key_content + "' '" + user_password + "'";
+    std::string script_shared = "sudo /home/shared/create_user.sh " + new_user +
+                                " '" + pub_key_content + "' '" + user_password + "'";
+    std::string script_home = "sudo /home/" + admin_user + "/create_user.sh " + new_user +
+                              " '" + pub_key_content + "' '" + user_password + "'";
 
     std::string inline_fallback = "sudo bash -c 'id -u " + new_user + " >/dev/null 2>&1 || useradd -m -s /bin/bash " + new_user +
                                   "; chmod 700 /home/" + new_user +
@@ -112,7 +114,7 @@ bool provision_remote_user(const std::string& admin_user,
                                   "; chmod 600 /home/" + new_user + "/.ssh/authorized_keys" +
                                   "; chown -R " + new_user + ":" + new_user + " /home/" + new_user + "/.ssh'";
 
-    std::string remote_cmd = script_cmd + " || " + inline_fallback;
+    std::string remote_cmd = script_shared + " || " + script_home + " || " + inline_fallback;
     std::string cmd = "ssh -t -p " + std::to_string(port) + " " + admin_user + "@" + host +
                       " \"" + remote_cmd + "\"";
 
